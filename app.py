@@ -50,22 +50,18 @@ def check_guess(guess, secret):
         return "Too Low", "📈 Go HIGHER!"
 
 
-def update_score(current_score: int, outcome: str, attempt_number: int):
+def update_score(current_score: int, outcome: str, attempt_number: int, difficulty: str = "Normal"):
+    base_scores = {"Easy": 50, "Normal": 100, "Hard": 150}
+    base = base_scores.get(difficulty, 100)
+    penalty = 10
+
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        points = base - penalty * (attempt_number - 1)
         if points < 10:
             points = 10
         return current_score + points
 
-    if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
-        return current_score - 5
-
-    if outcome == "Too Low":
-        return current_score - 5
-
-    return current_score
+    return current_score - penalty
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -81,9 +77,9 @@ difficulty = st.sidebar.selectbox(
 )
 
 attempt_limit_map = {
-    "Easy": 6,
-    "Normal": 8,
-    "Hard": 5,
+    "Easy": 5,
+    "Normal": 7,
+    "Hard": 10,
 }
 attempt_limit = attempt_limit_map[difficulty]
 
@@ -161,9 +157,16 @@ if new_game:
 
 if st.session_state.status != "playing":
     if st.session_state.status == "won":
-        st.success("You already won. Start a new game to play again.")
+        st.balloons()
+        st.success(
+            f"You won! The secret was {st.session_state.secret}. "
+            f"Final score: {st.session_state.score}"
+        )
     else:
-        st.error("Game over. Start a new game to try again.")
+        st.error(
+            f"Out of attempts! The secret was {st.session_state.secret}. "
+            f"Score: {st.session_state.score}"
+        )
     st.stop()
 
 if submit:
@@ -174,15 +177,11 @@ if submit:
     if not ok:
         st.session_state.history.append(raw_guess)
         st.error(err)
+        st.rerun()
     else:
         st.session_state.history.append(guess_int)
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
-
-        outcome, message = check_guess(guess_int, secret)
+        outcome, message = check_guess(guess_int, st.session_state.secret)
 
         st.session_state.last_hint = message
 
@@ -190,23 +189,15 @@ if submit:
             current_score=st.session_state.score,
             outcome=outcome,
             attempt_number=st.session_state.attempts,
+            difficulty=difficulty,
         )
 
         if outcome == "Win":
-            st.balloons()
             st.session_state.status = "won"
-            st.success(
-                f"You won! The secret was {st.session_state.secret}. "
-                f"Final score: {st.session_state.score}"
-            )
-        else:
-            if st.session_state.attempts >= attempt_limit:
-                st.session_state.status = "lost"
-                st.error(
-                    f"Out of attempts! "
-                    f"The secret was {st.session_state.secret}. "
-                    f"Score: {st.session_state.score}"
-                )
+        elif st.session_state.attempts >= attempt_limit:
+            st.session_state.status = "lost"
+
+        st.rerun()
 
 if show_hint and st.session_state.last_hint:
     st.warning(st.session_state.last_hint)

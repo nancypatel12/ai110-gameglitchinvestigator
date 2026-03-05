@@ -35,6 +35,10 @@ It wrote the code, ran away, and now the game is unplayable.
   4. **Difficulty ranges swapped** (`app.py`, `get_range_for_difficulty`): Normal was 1-100 and Hard was 1-50, which is backwards. Normal should be 1-50 and Hard should be 1-100.
   5. **Changing difficulty didn't affect the game** (`app.py`): Switching difficulty in the sidebar didn't reset the secret number or the game state, so the game always played with the original range. The info text was also hardcoded to say "between 1 and 100" regardless of difficulty.
   6. **No validation for out-of-range guesses** (`app.py`, `parse_guess`): The game accepted any number, even ones outside the valid range, wasting attempts on impossible guesses.
+  7. **Broken scoring system** (`app.py`, `update_score`): "Too High" guesses randomly gave +5 or -5 based on even/odd attempt number, while "Too Low" always gave -5. Scoring didn't account for difficulty at all.
+  8. **UI not updating until second click** (`app.py`): After submitting a guess, the history, score, and attempts in the debug panel didn't update until clicking again. Winning also required a second click to show the result. The page wasn't rerunning after state changes.
+  9. **Secret converted to string on even attempts** (`app.py`): On even-numbered attempts, the secret was cast to a string before comparison, causing type mismatch bugs in `check_guess`.
+  10. **Attempt limits didn't scale with difficulty** (`app.py`): Easy had 6, Normal had 8, and Hard had 5 attempts. Hard had the fewest attempts despite having the largest range (1-100).
 
 - [x] Explain what fixes you applied.
   1. **Fixed reversed hints**: Swapped the hint messages in `check_guess` so "Too High" returns "Go LOWER!" and "Too Low" returns "Go HIGHER!" -- fixed in both the normal path and the TypeError fallback.
@@ -43,6 +47,10 @@ It wrote the code, ran away, and now the game is unplayable.
   4. **Fixed difficulty ranges**: Swapped Normal to 1-50 and Hard to 1-100 so the difficulty actually scales correctly (Easy: 1-20, Normal: 1-50, Hard: 1-100).
   5. **Fixed difficulty switching**: Added difficulty tracking in session state so changing the setting resets the game with the correct range. Updated the info text to show the actual range instead of hardcoded "1 and 100".
   6. **Added out-of-range validation**: `parse_guess` now takes `low` and `high` parameters and rejects guesses outside the valid range with an error message.
+  7. **Fixed scoring system**: Replaced inconsistent scoring with difficulty-scaled scoring. Base points scale by difficulty (Easy: 50, Normal: 100, Hard: 150), minus 10 per wrong guess. Wrong guesses always cost 10 points regardless of direction. Minimum win score is 10.
+  8. **Fixed UI updating**: Added `st.rerun()` after each guess so the page immediately reflects state changes. Moved win/loss messages to the status check block so they display on the same click.
+  9. **Removed string conversion bug**: Removed the code that converted the secret to a string on even attempts, so comparisons always work correctly.
+  10. **Fixed attempt limits**: Rescaled to Easy: 5, Normal: 7, Hard: 10 so attempts increase with the range size.
 
 ## 📸 Demo
 
