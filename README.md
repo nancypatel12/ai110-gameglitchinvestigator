@@ -39,6 +39,9 @@ It wrote the code, ran away, and now the game is unplayable.
   8. **UI not updating until second click** (`app.py`): After submitting a guess, the history, score, and attempts in the debug panel didn't update until clicking again. Winning also required a second click to show the result. The page wasn't rerunning after state changes.
   9. **Secret converted to string on even attempts** (`app.py`): On even-numbered attempts, the secret was cast to a string before comparison, causing type mismatch bugs in `check_guess`.
   10. **Attempt limits didn't scale with difficulty** (`app.py`): Easy had 6, Normal had 8, and Hard had 5 attempts. Hard had the fewest attempts despite having the largest range (1-100).
+  11. **Attempts counter off by one** (`app.py`): Attempts started at 1 before any guess, so "attempts left" showed one fewer than it should on a fresh game.
+  12. **Invalid guesses burned an attempt** (`app.py`): The attempt counter incremented before input validation, so typing nonsense or out-of-range numbers wasted an attempt. Invalid input was also added to history.
+  13. **Score could go negative** (`app.py`, `update_score`): Wrong guesses subtracted 10 with no floor, so the score could drop below zero.
 
 - [x] Explain what fixes you applied.
   1. **Fixed reversed hints**: Swapped the hint messages in `check_guess` so "Too High" returns "Go LOWER!" and "Too Low" returns "Go HIGHER!" -- fixed in both the normal path and the TypeError fallback.
@@ -51,6 +54,9 @@ It wrote the code, ran away, and now the game is unplayable.
   8. **Fixed UI updating**: Added `st.rerun()` after each guess so the page immediately reflects state changes. Moved win/loss messages to the status check block so they display on the same click.
   9. **Removed string conversion bug**: Removed the code that converted the secret to a string on even attempts, so comparisons always work correctly.
   10. **Fixed attempt limits**: Rescaled to Easy: 5, Normal: 7, Hard: 10 so attempts increase with the range size.
+  11. **Fixed attempts counter**: Changed initial attempts to 0 so "attempts left" is accurate from the start.
+  12. **Fixed invalid guess handling**: Moved `attempts += 1` after validation so invalid input doesn't waste an attempt or get added to history.
+  13. **Added score floor**: Score can't drop below 0 on wrong guesses.
 
 ## 📸 Demo
 
